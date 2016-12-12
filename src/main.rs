@@ -109,7 +109,11 @@ fn train_img<'a>(args: &clap::ArgMatches<'a>) {
         // let g = field.next().unwrap();
         // let b = field.next().unwrap();
         let mut field = net.field(x as usize, y as usize).iter();
-        let rgb = Rgb::from_lab(Lab::new(*field.next().unwrap(), *field.next().unwrap(), *field.next().unwrap()));
+        let rgb = Rgb::from_lab(Lab::new(
+          *field.next().unwrap(),
+          *field.next().unwrap(),
+          *field.next().unwrap()
+        ));
         image::Rgb {
           data: [
             (gamma_compress(rgb.red) * 255.0) as u8,
