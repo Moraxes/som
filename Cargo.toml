@@ -1,0 +1,18 @@
+[package]
+name = "som"
+version = "0.1.0"
+authors = ["Maciej Śniegocki <m.w.sniegocki@gmail.com>"]
+
+[dependencies]
+# bincode = "^0.6"
+# byteorder = "0.5"
+clap = "^2.15"
+ctrlc = "2"
+image = "0.10.3"
+# nalgebra = { path = "../nalgebra" }
+rand = "^0.3"
+# rayon = "0.5"
+serde = "^0.8.19"
+serde_derive = "^0.8.19"
+serde_json = "^0.8"
+palette = "0.2"

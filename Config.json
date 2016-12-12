@@ -1,0 +1,9 @@
+{
+  "train_rate": 1,
+  "stability_threshold": 0.01,
+  "stability_duration": 1000,
+  "initial_radius": 10,
+  "radius_decay": 0.999,
+  "min_radius": 1,
+  "max_epochs": 5000
+}
