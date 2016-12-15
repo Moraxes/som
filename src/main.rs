@@ -66,12 +66,20 @@ fn train_img<'a>(args: &clap::ArgMatches<'a>) {
     let r = gamma_expand(rgb[0] as f32 / 255.0);
     let g = gamma_expand(rgb[1] as f32 / 255.0);
     let b = gamma_expand(rgb[2] as f32 / 255.0);
-    let lab = Lab::from_rgb(Rgb::new(r, g, b));
-    vec![
-      lab.l,
-      lab.a,
-      lab.b,
-    ] 
+    if args.is_present("lab") {
+      let lab = Lab::from_rgb(Rgb::new(r, g, b));
+      vec![
+        lab.l,
+        lab.a,
+        lab.b,
+      ]
+    } else {
+      vec![
+        r,
+        g,
+        b,
+      ]
+    }
   }).collect::<Vec<Vec<f32>>>();
 
   let conf: som::TrainConfig = {
@@ -90,7 +98,8 @@ fn train_img<'a>(args: &clap::ArgMatches<'a>) {
     }
   };
 
-  let mut rng = rand::XorShiftRng::from_seed(rand::random());
+  // let mut rng = rand::XorShiftRng::from_seed(rand::random());
+  let mut rng = rand::XorShiftRng::from_seed([498362028, 98530985, 351971551, 956256133]);
   let mut net = som::RectSom::new_random(net_defn.width, net_defn.height, &vec![(0.0, 100.0), (-128.0, 127.0), (-128.0, 127.0)], &mut rng);
 
   let learning = Arc::new(AtomicBool::new(true));
@@ -104,16 +113,20 @@ fn train_img<'a>(args: &clap::ArgMatches<'a>) {
   let map_img = image::RgbImage::from_fn(net.width as u32, net.height as u32,
       |x, y| {
         use palette::*;
-        // let mut field = net.field(x as usize, y as usize).iter().map(|&c| gamma_compress(c) * 255.0).map(|c| c as u8);
-        // let r = field.next().unwrap();
-        // let g = field.next().unwrap();
-        // let b = field.next().unwrap();
         let mut field = net.field(x as usize, y as usize).iter();
-        let rgb = Rgb::from_lab(Lab::new(
-          *field.next().unwrap(),
-          *field.next().unwrap(),
-          *field.next().unwrap()
-        ));
+        let rgb = if args.is_present("lab") {
+          Rgb::from_lab(Lab::new(
+            *field.next().unwrap(),
+            *field.next().unwrap(),
+            *field.next().unwrap()
+          ))
+        } else {
+          Rgb::new(
+            *field.next().unwrap(),
+            *field.next().unwrap(),
+            *field.next().unwrap()
+          )
+        };
         image::Rgb {
           data: [
             (gamma_compress(rgb.red) * 255.0) as u8,

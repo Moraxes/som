@@ -71,6 +71,7 @@ impl RectSom {
     total_magnitude / self.fields.len() as f32
   }
 
+  #[allow(dead_code)]
   pub fn apply_diff(&mut self, diff: &[Vec<f32>]) {
     for it in 0..self.fields.len() {
       for (jt, w) in self.fields[it].iter_mut().enumerate() {
@@ -89,11 +90,28 @@ pub struct TrainConfig {
   pub radius_decay: f32,
   pub min_radius: Option<f32>,
   pub max_epochs: usize,
+  pub neighbourhood: String,
 }
 
 pub fn gaussian(dx: isize, dy: isize, radius: f32) -> f32 {
   let (dx, dy) = (dx as f32, dy as f32);
   (-(dx*dx + dy*dy)/(2.0*radius*radius)).exp()
+}
+
+pub fn sinc_sq(dx: isize, dy: isize, radius: f32) -> f32 {
+  if dx == 0 && dy == 0 {
+    return 1.0;
+  }
+  let (dx, dy) = (dx as f32, dy as f32);
+  let dist = (dx*dx + dy*dy).sqrt() / (radius * 2.0);
+  let sinc = dist.sin() / dist;
+  sinc
+}
+
+pub fn expon(dx: isize, dy: isize, radius: f32) -> f32 {
+  let (dx, dy) = (dx as f32, dy as f32);
+  let dist = (dx*dx + dy*dy).sqrt() / radius;
+  (-dist).exp()
 }
 
 pub fn train<R: Rng, Df: Copy + FnOnce(&[f32], &[f32]) -> f32>(
@@ -116,7 +134,12 @@ pub fn train<R: Rng, Df: Copy + FnOnce(&[f32], &[f32]) -> f32>(
     }
     let ex = &rng.choose(examples).unwrap()[..];
     let bfu = som.best_fitting_unit(ex, dist_fn);
-    let diff = som.nudge_weights(bfu, radius, ex, gaussian, conf.train_rate);
+    let diff = som.nudge_weights(bfu, radius, ex, match &conf.neighbourhood[..] {
+      "gaussian" => gaussian,
+      "sinc_sq" => sinc_sq,
+      "expon" => expon,
+      _ => unreachable!(),
+    }, conf.train_rate);
     if diff < conf.stability_threshold {
       stability += 1;
     } else {
